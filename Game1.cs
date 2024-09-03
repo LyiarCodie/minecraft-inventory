@@ -9,6 +9,9 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
+    private Dimensions2 windowSize;
+
+    private Hotbar hotbar;
 
     private KeyboardManager keyboard;    
 
@@ -17,12 +20,12 @@ public class Game1 : Game
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
+        windowSize = new Dimensions2(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
     }
 
     protected override void Initialize()
     {
         keyboard = new KeyboardManager();
-
         base.Initialize();
     }
 
@@ -30,7 +33,7 @@ public class Game1 : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-
+        hotbar = new Hotbar(this, new Vector2(windowSize.Width / 2f, windowSize.Height - 64f));
         // TODO: use this.Content to load your game content here
     }
 
@@ -38,10 +41,11 @@ public class Game1 : Game
     {
         keyboard.PreUpdate();
         
-        if (keyboard.IsKeyPress(Keys.E))
-        {
-            Console.WriteLine("Open/close inventory");
-        }
+        hotbar.Update(keyboard);
+        // if (keyboard.IsKeyPress(Keys.E))
+        // {
+        //     Console.WriteLine("Open/close inventory");
+        // }
         
         keyboard.PostUpdate();
 
@@ -53,6 +57,9 @@ public class Game1 : Game
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
         // TODO: Add your drawing code here
+        _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+        hotbar.Draw(_spriteBatch, gameTime);
+        _spriteBatch.End();
 
         base.Draw(gameTime);
     }
