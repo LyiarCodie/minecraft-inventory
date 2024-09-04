@@ -1,11 +1,13 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using minecraft_inventory.classes;
 
 namespace minecraft_inventory;
 
 internal struct Slot
 {
     public Rectangle rect;
+    public Item Item;
 
     private Color[] colorData;
     private Texture2D texture;
@@ -66,10 +68,19 @@ internal struct Slot
     public void Draw(SpriteBatch sb)
     {
         sb.Draw(texture, Position, Color);
+
+        if (Item != null)
+        {
+            Item.Draw(sb);
+        }
     }
 
     public void Dispose()
     {
         texture.Dispose();
+        if (Item != null)
+        {
+            Item.Dispose();
+        }
     }
 }

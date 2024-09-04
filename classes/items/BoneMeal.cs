@@ -1,0 +1,16 @@
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace minecraft_inventory.classes.items
+{
+    public class BoneMeal : Item
+    {
+        public BoneMeal(Texture2D texture, Vector2 position)
+        {
+            this.texture = texture;
+            this.position = position;
+            
+            sourceRectangle = new Rectangle(16 + 1, 32 + 1, 16, 16);
+        }
+    }
+}

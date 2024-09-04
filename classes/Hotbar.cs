@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace minecraft_inventory;
 
-internal class Hotbar
+internal class Hotbar : Observer
 {
     private Vector2 position;
     private Texture2D texture;
@@ -118,5 +118,10 @@ internal class Hotbar
         {
             slot.Dispose();
         }
+    }
+
+    public void UpdateByNotifier()
+    {
+        throw new NotImplementedException();
     }
 }
