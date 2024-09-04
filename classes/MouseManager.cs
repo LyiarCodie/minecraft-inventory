@@ -1,9 +1,12 @@
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 namespace minecraft_inventory.classes
 {
     internal class MouseManager
     {
+        public Vector2Int Position { get; private set; } = Vector2Int.Zero;
+
         private struct Button
         {
             public bool hold;
@@ -26,6 +29,8 @@ namespace minecraft_inventory.classes
                 rightButton.hold = true;
                 rightButton.press = true;
             }
+
+            Position = new Vector2Int(mstate.X, mstate.Y);
         }
 
         // button:

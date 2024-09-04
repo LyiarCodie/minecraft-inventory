@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using minecraft_inventory.classes;
@@ -14,9 +13,10 @@ public class Game1 : Game
 
     private Hotbar hotbar;
     private Inventory inventory;
+    private Cursor cursor;
 
     private KeyboardManager keyboard;
-    private MouseManager mouse;
+    private MouseManager mouseManager;
 
     public Game1()
     {
@@ -29,7 +29,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         keyboard = new KeyboardManager();
-        mouse = new MouseManager();
+        mouseManager = new MouseManager();
         base.Initialize();
     }
 
@@ -49,6 +49,7 @@ public class Game1 : Game
                 windowSize.Height / 2f - inventoryTex.Height * 2f / 2f
             )
         );
+        cursor = new Cursor();
 
         inventory.Observers.Add(hotbar);
     }
@@ -56,20 +57,30 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         keyboard.PreUpdate();
-        mouse.PreUpdate();
+        mouseManager.PreUpdate();
         
         if (!inventory.IsOpen)
         {
             hotbar.Update(keyboard);
         }
+        else
+        {
+            cursor.Update(mouseManager);
+            inventory.Update(mouseManager, cursor);
+        }
 
         if (keyboard.IsKeyPress(Keys.E))
         {
-            inventory.IsOpen = !inventory.IsOpen;
+            if (!inventory.IsOpen) inventory.IsOpen = true;
+            else if (inventory.IsOpen)
+            {   
+                inventory.RestoreItemPositionOnClosing(cursor);
+                inventory.IsOpen = false;
+            }
         }
         
         keyboard.PostUpdate();
-        mouse.PostUpdate();
+        mouseManager.PostUpdate();
 
         base.Update(gameTime);
     }
@@ -84,6 +95,7 @@ public class Game1 : Game
         if (inventory.IsOpen)
         {
             inventory.Draw(_spriteBatch);
+            cursor.Draw(_spriteBatch);
         }
         _spriteBatch.End();
 
@@ -94,6 +106,7 @@ public class Game1 : Game
     {
         hotbar.Dispose();
         inventory.Dispose();
+        cursor.Dispose();
         base.Dispose(disposing);
     }
 }

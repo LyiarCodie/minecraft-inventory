@@ -7,14 +7,17 @@ namespace minecraft_inventory.classes
     public class Item
     {
         protected Texture2D texture;
-        protected Vector2 position;
+        public Vector2Int Position;
         protected Rectangle sourceRectangle;
+
+        public int Width => texture.Width;
+        public int Height => texture.Height;
 
         public void Draw(SpriteBatch sb)
         {
             sb.Draw(
                 texture, 
-                new Rectangle((int) position.X, (int)position.Y, 16 * 2, 16 * 2), 
+                new Rectangle(Position.X, Position.Y, 16 * 2, 16 * 2), 
                 sourceRectangle, 
                 Color.White
             );

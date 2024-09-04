@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using minecraft_inventory.classes;
 using minecraft_inventory.classes.items;
 
 namespace minecraft_inventory
@@ -17,6 +19,8 @@ namespace minecraft_inventory
 
         private Slot[] storageSlots;
         private Slot[] hotbarSlots;
+
+        private short lastHoveredSlotId = -1;
         
         public Inventory(Game1 game, Texture2D texture, Texture2D itemsTexture, Vector2 position)
         {
@@ -88,7 +92,78 @@ namespace minecraft_inventory
 
         private void PopulateInventory()
         {
-            storageSlots[2].Item = new Stick(itemsTexture, storageSlots[2].Position);
+            storageSlots[2].Item = new Stick(itemsTexture, Vector2Int.Parse(storageSlots[2].Position));
+            storageSlots[15].Item = new Coal(itemsTexture, Vector2Int.Parse(storageSlots[15].Position));
+        }
+
+        public void RestoreItemPositionOnClosing(Cursor cursor)
+        {
+            if (cursor.OriginalSlotId >= 0)
+            {
+                storageSlots[cursor.OriginalSlotId].Item = cursor.Item;
+                storageSlots[cursor.OriginalSlotId].Item.Position = Vector2Int.Parse(storageSlots[cursor.OriginalSlotId].Position);
+                cursor.Item = null;
+                cursor.OriginalSlotId = -1;
+            }
+        }
+
+        public void HoverSlot(byte slotId)
+        {
+            if (lastHoveredSlotId != slotId)
+            {
+                lastHoveredSlotId = slotId;
+            }
+        }
+
+        public void TakeSlotItem(byte slotId, Cursor cursor)
+        {
+            if (storageSlots[slotId].Item != null && cursor.Item == null)
+            {
+                cursor.Item = storageSlots[slotId].Item;
+                storageSlots[slotId].Item = null;
+                cursor.OriginalSlotId = slotId;
+            }
+        }
+        public void SwapSlotItem(byte slotId, Cursor cursor)
+        {
+            if (storageSlots[slotId].Item != null && cursor.Item != null)
+            {
+                var slotItem = storageSlots[slotId].Item;
+                storageSlots[slotId].Item = cursor.Item;
+                storageSlots[slotId].Item.Position = Vector2Int.Parse(storageSlots[slotId].Position);
+                cursor.Item = slotItem;
+                cursor.OriginalSlotId = slotId;
+            }
+        }
+
+        public void PutItemOnSlot(byte slotId, Cursor cursor)
+        {
+            if (storageSlots[slotId].Item == null && cursor.Item != null)
+            {
+                storageSlots[slotId].Item = cursor.Item;
+                storageSlots[slotId].Item.Position = Vector2Int.Parse(storageSlots[slotId].Position);
+                cursor.Item = null;
+                cursor.OriginalSlotId = -1;
+            }
+        }
+
+        public void Update(MouseManager mouse, Cursor cursor)
+        {
+            for (byte i = 0; i < storageSlots.Length; i++)
+            {
+                if (storageSlots[i].Intersects(cursor.Position))
+                {
+                    HoverSlot(i);
+
+                    if (mouse.IsButtonPress("Left"))
+                    {
+                        if (storageSlots[i].Item != null && cursor.Item == null) TakeSlotItem(i, cursor);
+                        else if (storageSlots[i].Item != null && cursor.Item != null) SwapSlotItem(i, cursor);
+                        else if (storageSlots[i].Item == null && cursor.Item != null) PutItemOnSlot(i, cursor);
+                        
+                    }
+                }
+            }
         }
 
         public void Dispose()

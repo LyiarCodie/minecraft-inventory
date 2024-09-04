@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using minecraft_inventory.classes;
@@ -7,7 +8,7 @@ namespace minecraft_inventory;
 internal struct Slot
 {
     public Rectangle rect;
-    public Item Item;
+    public Item Item = null;
 
     private Color[] colorData;
     private Texture2D texture;
@@ -63,6 +64,21 @@ internal struct Slot
     
         Position = position;
         Color = color;
+    }
+
+    public bool Intersects(Vector2Int position)
+    {
+        return position.X > rect.Left && position.X < rect.Right && position.Y > rect.Top && position.Y < rect.Bottom;
+    }
+
+    public bool Intersects(int x, int  y)
+    {
+        return x > rect.Left && x < rect.Right && y > rect.Top && y < rect.Bottom;
+    }
+
+    public void Update()
+    {
+        Console.WriteLine("OLHA A XERECA!");
     }
 
     public void Draw(SpriteBatch sb)
