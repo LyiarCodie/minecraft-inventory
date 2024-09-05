@@ -6,6 +6,7 @@ namespace minecraft_inventory.classes
     {
         public Vector2Int Position;
         public short OriginalSlotId = -1;
+        public Slot[] OriginalSlots;
         public Item Item = null;
         public void Update(MouseManager mouse)
         {

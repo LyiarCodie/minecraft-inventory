@@ -9,7 +9,7 @@ namespace minecraft_inventory
 {
     internal class Inventory
     {
-        public List<Observer> Observers = new List<Observer>();
+        public List<Observer> HotbarObservers = new List<Observer>();
 
         public bool IsOpen = false;
 
@@ -79,6 +79,24 @@ namespace minecraft_inventory
             PopulateInventory();
         }
 
+        public void LoadContent()
+        {
+            Slot[] slots = new Slot[hotbarSlots.Length];
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (hotbarSlots[i].Item != null)
+                {
+                    slots[i].Item = hotbarSlots[i].Item.ShallowCopy();
+                }
+            }
+
+            foreach (var observer in HotbarObservers)
+            {
+                observer.UpdateByNotifier(new Message(MessageOrder.GET_CURRENT, slots));
+            }
+        }
+
         public void Draw(SpriteBatch sb)
         {
             sb.Draw(
@@ -94,16 +112,20 @@ namespace minecraft_inventory
         {
             storageSlots[2].Item = new Stick(itemsTexture, Vector2Int.Parse(storageSlots[2].Position));
             storageSlots[15].Item = new Coal(itemsTexture, Vector2Int.Parse(storageSlots[15].Position));
+
+            hotbarSlots[0].Item = new GoldBar(itemsTexture, Vector2Int.Parse(hotbarSlots[0].Position));
+            hotbarSlots[3].Item = new BoneMeal(itemsTexture, Vector2Int.Parse(hotbarSlots[3].Position));
         }
 
         public void RestoreItemPositionOnClosing(Cursor cursor)
         {
             if (cursor.OriginalSlotId >= 0)
             {
-                storageSlots[cursor.OriginalSlotId].Item = cursor.Item;
-                storageSlots[cursor.OriginalSlotId].Item.Position = Vector2Int.Parse(storageSlots[cursor.OriginalSlotId].Position);
+                cursor.OriginalSlots[cursor.OriginalSlotId].Item = cursor.Item;
+                cursor.OriginalSlots[cursor.OriginalSlotId].Item.Position = Vector2Int.Parse(cursor.OriginalSlots[cursor.OriginalSlotId].Position);
                 cursor.Item = null;
                 cursor.OriginalSlotId = -1;
+                cursor.OriginalSlots = null;
             }
         }
 
@@ -115,39 +137,40 @@ namespace minecraft_inventory
             }
         }
 
-        public void TakeSlotItem(byte slotId, Cursor cursor)
+        private void TakeSlotItem(Slot[] slots, byte slotId, Cursor cursor)
         {
-            if (storageSlots[slotId].Item != null && cursor.Item == null)
+            if (slots[slotId].Item != null && cursor.Item == null)
             {
-                cursor.Item = storageSlots[slotId].Item;
-                storageSlots[slotId].Item = null;
+                cursor.Item = slots[slotId].Item;
+                slots[slotId].Item = null;
                 cursor.OriginalSlotId = slotId;
+                cursor.OriginalSlots = slots;
             }
         }
-        public void SwapSlotItem(byte slotId, Cursor cursor)
+        private void SwapSlotItem(Slot[] slots, byte slotId, Cursor cursor)
         {
-            if (storageSlots[slotId].Item != null && cursor.Item != null)
+            if (slots[slotId].Item != null && cursor.Item != null)
             {
-                var slotItem = storageSlots[slotId].Item;
-                storageSlots[slotId].Item = cursor.Item;
-                storageSlots[slotId].Item.Position = Vector2Int.Parse(storageSlots[slotId].Position);
+                var slotItem = slots[slotId].Item;
+                slots[slotId].Item = cursor.Item;
+                slots[slotId].Item.Position = Vector2Int.Parse(slots[slotId].Position);
                 cursor.Item = slotItem;
-                cursor.OriginalSlotId = slotId;
             }
         }
 
-        public void PutItemOnSlot(byte slotId, Cursor cursor)
+        private void PutItemOnSlot(Slot[] slots, byte slotId, Cursor cursor)
         {
-            if (storageSlots[slotId].Item == null && cursor.Item != null)
+            if (slots[slotId].Item == null && cursor.Item != null)
             {
-                storageSlots[slotId].Item = cursor.Item;
-                storageSlots[slotId].Item.Position = Vector2Int.Parse(storageSlots[slotId].Position);
+                slots[slotId].Item = cursor.Item;
+                slots[slotId].Item.Position = Vector2Int.Parse(slots[slotId].Position);
                 cursor.Item = null;
                 cursor.OriginalSlotId = -1;
+                cursor.OriginalSlots = null;
             }
         }
 
-        public void Update(MouseManager mouse, Cursor cursor)
+        private void StorageSlotsClick(Cursor cursor, MouseManager mouse)
         {
             for (byte i = 0; i < storageSlots.Length; i++)
             {
@@ -157,13 +180,58 @@ namespace minecraft_inventory
 
                     if (mouse.IsButtonPress("Left"))
                     {
-                        if (storageSlots[i].Item != null && cursor.Item == null) TakeSlotItem(i, cursor);
-                        else if (storageSlots[i].Item != null && cursor.Item != null) SwapSlotItem(i, cursor);
-                        else if (storageSlots[i].Item == null && cursor.Item != null) PutItemOnSlot(i, cursor);
-                        
+                        if (storageSlots[i].Item != null && cursor.Item == null) TakeSlotItem(storageSlots, i, cursor);
+                        else if (storageSlots[i].Item != null && cursor.Item != null) SwapSlotItem(storageSlots, i, cursor);
+                        else if (storageSlots[i].Item == null && cursor.Item != null) PutItemOnSlot(storageSlots, i, cursor);
                     }
                 }
             }
+        }
+
+        private void hotbarSlotsClick(Cursor cursor, MouseManager mouse)
+        {
+            for (byte i = 0; i < hotbarSlots.Length; i++)
+            {
+                if (hotbarSlots[i].Intersects(cursor.Position))
+                {
+                    HoverSlot(i);
+
+                    if (mouse.IsButtonPress("Left"))
+                    {
+                        if (hotbarSlots[i].Item != null && cursor.Item == null) 
+                        {
+                            TakeSlotItem(hotbarSlots, i, cursor);
+                            foreach (var observer in HotbarObservers)
+                            {
+                                observer.UpdateByNotifier(new Message(MessageOrder.PICK_UP, i));
+                            }
+                        }
+                        else if (hotbarSlots[i].Item != null && cursor.Item != null)
+                        {
+                            foreach (var observer in HotbarObservers)
+                            {
+                                observer.UpdateByNotifier(new Message(MessageOrder.EXCHANGE, i, cursor.Item.ShallowCopy()));
+                            }
+                            SwapSlotItem(hotbarSlots, i, cursor);
+                        }
+                        else if (hotbarSlots[i].Item == null && cursor.Item != null)
+                        {
+                            foreach (var observer in HotbarObservers)
+                            {
+                                observer.UpdateByNotifier(new Message(MessageOrder.PUT, i, cursor.Item.ShallowCopy()));
+                            }
+                            PutItemOnSlot(hotbarSlots, i, cursor);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void Update(MouseManager mouse, Cursor cursor)
+        {
+            StorageSlotsClick(cursor, mouse);
+        
+            hotbarSlotsClick(cursor, mouse);
         }
 
         public void Dispose()

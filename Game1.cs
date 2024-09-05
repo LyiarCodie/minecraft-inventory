@@ -46,12 +46,14 @@ public class Game1 : Game
             Content.Load<Texture2D>("items"),
             new Vector2(
                 windowSize.Width / 2f - inventoryTex.Width * 2f / 2f,
-                windowSize.Height / 2f - inventoryTex.Height * 2f / 2f
+                windowSize.Height / 2f - inventoryTex.Height * 2f / 1.5f 
             )
         );
         cursor = new Cursor();
 
-        inventory.Observers.Add(hotbar);
+        inventory.HotbarObservers.Add(hotbar);
+
+        inventory.LoadContent();
     }
 
     protected override void Update(GameTime gameTime)

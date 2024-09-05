@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using minecraft_inventory.classes;
 
 namespace minecraft_inventory;
 
@@ -19,10 +20,36 @@ internal class Hotbar : Observer
 
     private Keys[] digitKeys;
 
-    // observer notification
-    public void UpdateHotbar(string message)
+    public void UpdateByNotifier(Message message)
     {
-
+        if (message.Order == MessageOrder.GET_CURRENT)
+        {
+            for (byte i = 0; i < slots.Length; i++)
+            {
+                if (message.CurrentSlots[i].Item != null)
+                {
+                    slots[i].Item = message.CurrentSlots[i].Item;
+                    message.CurrentSlots[i].Item = null;
+                    slots[i].Item.Position = Vector2Int.Parse(slots[i].Position);
+                }
+            }
+        }
+        if (message.Order == MessageOrder.PICK_UP)
+        {
+            slots[message.SlotId].Item = null;
+        }
+        if (message.Order == MessageOrder.PUT)
+        {
+            slots[message.SlotId].Item = message.Item;
+            message.Item = null;
+            slots[message.SlotId].Item.Position = Vector2Int.Parse(slots[message.SlotId].Position);
+        }
+        else if (message.Order == MessageOrder.EXCHANGE)
+        {
+            slots[message.SlotId].Item = message.Item;
+            message.Item = null;
+            slots[message.SlotId].Item.Position = Vector2Int.Parse(slots[message.SlotId].Position);
+        }
     }
     
     public Hotbar(Game1 game, Vector2 position)

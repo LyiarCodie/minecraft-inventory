@@ -10,7 +10,7 @@ namespace minecraft_inventory.classes.items
             this.texture = texture;
             Position = position;
             
-            sourceRectangle = new Rectangle(16 + 1, 32 + 1, 16, 16);
+            sourceRectangle = new Rectangle(16 + 1, 32 + 2, 16, 16);
         }
     }
 }

@@ -13,6 +13,11 @@ namespace minecraft_inventory.classes
         public int Width => texture.Width;
         public int Height => texture.Height;
 
+        public Item ShallowCopy()
+        {
+            return (Item)MemberwiseClone();
+        }
+
         public void Draw(SpriteBatch sb)
         {
             sb.Draw(

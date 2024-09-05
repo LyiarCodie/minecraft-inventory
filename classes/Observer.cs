@@ -1,7 +1,9 @@
+using minecraft_inventory.classes;
+
 namespace minecraft_inventory
 {
-    public interface Observer
+    internal interface Observer
     {
-        public void UpdateByNotifier();
+        public void UpdateByNotifier(Message message);
     }
 }
